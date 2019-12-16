@@ -1,0 +1,22 @@
+{
+  "name": "dev-random",
+  "version": "0.0.0",
+  "description": "JS implementation of dev/random",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Andrew Silluron",
+  "license": "MIT",
+  "devDependencies": {
+    "flow-bin": "^0.114.0"
+  },
+  "bin": {
+    "randomjs": "./cli.js"
+  },
+  "dependencies": {
+    "@types/crypto-js": "^3.1.43",
+    "@types/node": "^12.12.17",
+    "aes-js": "^3.1.2"
+  }
+}

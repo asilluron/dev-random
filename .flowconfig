@@ -1,0 +1,14 @@
+[ignore]
+.*/node_modules/.*
+.*/git/.*
+
+[include]
+src/
+
+[libs]
+
+[lints]
+
+[options]
+
+[strict]
