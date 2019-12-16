@@ -3,21 +3,30 @@ const MAX_BLOCKS = 65536; // 2 ^ 16
 const EventEmitter = require("events");
 var aesjs = require("aes-js");
 const crypto = require("crypto");
+const LocalCrypto = require('./Crypto');
 
 // @flow
 class PRNG extends EventEmitter {
 	constructor() {
 		super();
-		// Using dataview to avoid Endian problems
-		this.key = new DataView(new ArrayBuffer(INIT_BYTE_SIZE));
-		crypto.randomFillSync(this.key);
-        this.seed = null;
-        this.reseed();
+		this.localCrypto = new LocalCrypto(INIT_BYTE_SIZE * 4);
+		this.localCrypto._accumulate();
+		this.key = Buffer.from(new ArrayBuffer(INIT_BYTE_SIZE))
+		this.currentCounter = 0;
+		this.seed = null;
+		this.localCrypto.on('full', () => {
+			this.localCrypto.randomFillSync(this.key);
+			this.reseed();
+			this.emit('ready');
+		});
+		
+		
+       
         this.on('closeBlock', () => {
             this.reseed();
             this.random();
         })
-        this.currentCounter = 0;
+       
 	}
 
 	reseed() {
@@ -34,19 +43,15 @@ class PRNG extends EventEmitter {
     }
 
 	_generate() {
-
 		var aesCtr = new aesjs.ModeOfOperation.ctr(
 			this.seed,
 			new aesjs.Counter(this.currentCounter)
 		);
-        const randomPool = new DataView(new ArrayBuffer(MAX_BLOCKS));
-        // From Node.JS, methods like keyboard events, mouse events and file system events
-        // can be hard to secure. Using "randomFill", we start off with a cryptographically strong
-        // pool of entropy managed at the Kernel level
+        const randomPool = Buffer.from(new ArrayBuffer(MAX_BLOCKS));
 		crypto.randomFillSync(randomPool);
 		for (let i = 0; i < MAX_BLOCKS; i++) {
-            const blockView = new DataView(randomPool.buffer, i * 16, 16)
-            const arrBlockView = new Uint8Array(blockView.buffer);
+			const bufferSlice = randomPool.slice(i * 16, (i * 16) + 16);
+            const arrBlockView = new Uint8Array(bufferSlice);
 			this.emit('newBytes', aesCtr.encrypt(arrBlockView));
         }
         this.emit('closeBlock');

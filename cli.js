@@ -12,7 +12,11 @@ byteGenerator.on('newBytes', bytes => {
     process.stdout.write(bytes);
 });
 
-byteGenerator.random();
+byteGenerator.on('ready', bytes => {
+    byteGenerator.random();
+});
+
+
 
 
 
